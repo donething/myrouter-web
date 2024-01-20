@@ -40,8 +40,8 @@ interface RuleItemProps {
 const addRule = async (ruleStr: string) => {
   const obj: Result<string> = await doAjax("/api/clash/rule/add", {data: ruleStr})
   if (obj.code !== 0) {
-    console.log("规则添加失败", obj.msg)
-    toast({title: "规则添加失败", description: ruleStr + "\n" + obj.msg, variant: "destructive"})
+    console.log(`添加规则'${ruleStr}'失败：`, obj.msg)
+    toast({title: "添加规则失败", description: obj.msg, variant: "destructive"})
     return false
   }
 
@@ -163,7 +163,7 @@ const RuleManager = React.memo(() => {
   }
 
   return (
-    <div className={"flex flex-col gap-4"}>
+    <div className={"flex flex-col gap-4 h-full pb-14"}>
       <Card>
         <CardHeader>管理 Clash</CardHeader>
         <CardContent>
@@ -201,9 +201,9 @@ const RuleManager = React.memo(() => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>已添加的规则</CardHeader>
-        <CardContent className={"flex flex-col gap-1 overflow-y-auto h-[250px]"}>{rules}</CardContent>
+      <Card className={"flex flex-col min-h-0 h-full"}>
+        <CardHeader>已添加规则</CardHeader>
+        <CardContent className={"flex flex-col gap-1 overflow-y-auto"}>{rules}</CardContent>
       </Card>
     </div>
   )
