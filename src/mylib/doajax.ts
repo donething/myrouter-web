@@ -19,7 +19,7 @@ export interface Data {
 const doAjax = async (path: string, data?: Data) => {
   const settings: SettingsType = JSON.parse(localStorage.getItem(LS_SETTINGS) || "{}")
   if (!settings.auth) {
-    throw Error("请先进设置界限，设置操作授权码")
+    throw Error("请先进设置界限，设置授权码")
   }
 
   const method = data ? "POST" : "GET"
@@ -30,7 +30,12 @@ const doAjax = async (path: string, data?: Data) => {
   }
 
   const resp = await fetch(path, {headers, method, body})
-  return resp.json()
+  // 获取出错
+  if (resp.status < 200 || resp.status >= 400) {
+    throw Error(resp.statusText)
+  }
+
+  return  await resp.json()
 }
 
 export default doAjax

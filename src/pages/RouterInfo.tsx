@@ -4,6 +4,7 @@ import {useQuery} from "@tanstack/react-query"
 import doAjax, {Result} from "@/mylib/doajax.ts"
 import {RouterStatus} from "@/pages/RouterInfoType.ts"
 import LoadingOrError from "@/mylib/dealLoad.tsx"
+import {retryTimeout} from "@/mylib/query.ts"
 
 const QueryRouterStatus = "QueryRouterStatus"
 
@@ -16,8 +17,8 @@ interface ValueProps {
 // 某项信息组件
 const Content: FC<ValueProps> = ({label, value}) => {
   return (
-    <CardContent className={"pt-0 pb-0"}>
-      <div className="flex gap-4 bg-white p-2">
+    <CardContent>
+      <div className="flex flex-row gap-4 bg-white">
         <p className="text-gray-600 font-medium">{label}</p>
         <p className="text-indigo-600 font-semibold">{value}</p>
       </div>
@@ -31,7 +32,8 @@ const RouterInfo = React.memo(() => {
     useQuery<Result<RouterStatus>>({
       queryKey: [QueryRouterStatus],
       queryFn: () => doAjax("/api/router/status"),
-      refetchInterval: 1000
+      refetchInterval: 1000,
+      retry: retryTimeout
     })
 
   const status = React.useMemo(() => {
@@ -40,15 +42,15 @@ const RouterInfo = React.memo(() => {
     }
 
     return (
-      <div className={"flex flex-col gap-4"}>
+      <div className={"flex flex-col gap-2"}>
         <Card>
-          <CardHeader className={"p-2"}>IP 地址</CardHeader>
-          <Content label={"IPv4"} value={data.data.ipAddr.ipv4}/>
+          <CardHeader>IP 地址</CardHeader>
+          <Content label={"IPv4"} value={data.data.ipAddr.ipv4 || "为空或不是公网地址"}/>
           <Content label={"IPv6"} value={data.data.ipAddr.ipv6}/>
         </Card>
 
         <Card>
-          <CardHeader className={"p-2"}>内存使用</CardHeader>
+          <CardHeader>内存使用</CardHeader>
           <Content label={"可用"} value={data.data.mem.available}/>
           <Content label={"已用"} value={data.data.mem.used}/>
           <Content label={"总共"} value={data.data.mem.total}/>
@@ -56,7 +58,7 @@ const RouterInfo = React.memo(() => {
         </Card>
 
         <Card>
-          <CardHeader className={"p-2"}>CPU 使用</CardHeader>
+          <CardHeader>CPU 使用</CardHeader>
           <Content label={"占比"} value={`${data.data.cpu.usedPercent}%`}/>
         </Card>
       </div>

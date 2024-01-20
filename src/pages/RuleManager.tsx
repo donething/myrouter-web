@@ -1,7 +1,7 @@
 import React from "react"
 import {QueryObserverResult, RefetchOptions, useQuery} from "@tanstack/react-query"
 import {Result} from "@/mylib/doajax.ts"
-import {Card, CardHeader} from "@/components/ui/card.tsx"
+import {Card, CardContent, CardHeader} from "@/components/ui/card.tsx"
 import {Input} from "@/components/ui/input.tsx"
 import {ClashRule, RenderData, RuleTypes} from "@/pages/RuleManagerType.ts"
 import {
@@ -18,6 +18,7 @@ import {toast} from "@/components/ui/use-toast.ts"
 import {Button} from "@/components/ui/button.tsx"
 import doAjax from "@/mylib/doajax.ts"
 import {ToastAction} from "@/components/ui/toast.tsx"
+import {retryTimeout} from "@/mylib/query.ts"
 
 const QueryRenderData = ["QueryRenderData"]
 
@@ -65,14 +66,12 @@ const RuleItem = React.memo((props: RuleItemProps) => {
     await props.refetch()
     toast({
       title: "已删除规则", description: props.rule, action:
-        <ToastAction altText={"恢复"} onClick={() => addRule(props.rule)}>
-          恢复
-        </ToastAction>
+        <ToastAction altText={"恢复"} onClick={() => addRule(props.rule)}>恢复</ToastAction>
     })
   }, [props])
 
   return (
-    <div className={"flex flex-row gap-4 p-2 items-center justify-between"}>
+    <div className={"flex flex-row items-center justify-between"}>
       <span>{props.rule}</span>
       <Button size={"sm"} variant={"destructive"} onClick={onDel}>删除</Button>
     </div>
@@ -86,7 +85,8 @@ const RuleManager = React.memo(() => {
   const {data, isLoading, error, refetch} =
     useQuery<Result<RenderData>>({
       queryKey: QueryRenderData,
-      queryFn: () => doAjax("/api/clash/data/render")
+      queryFn: () => doAjax("/api/clash/data/render"),
+      retry: retryTimeout
     })
 
   // 输入新规则
@@ -117,6 +117,20 @@ const RuleManager = React.memo(() => {
     await refetch()
     setNewRule(defaultValue)
   }, [newRule, refetch])
+
+  const onRestartClash = React.useCallback(async () => {
+    // 路由器执行重启命令需要时间，先提示正在重启
+    toast({description: "开始重启 Clash ..."})
+
+    const data = {data: true}
+    const obj = await doAjax("/api/clash/manager/restart", data)
+    if (obj.code !== 0) {
+      toast({title: "重启 Clash 失败", description: obj.msg, variant: "destructive"})
+      return
+    }
+
+    toast({description: "已重启 Clash", variant: "destructive"})
+  }, [])
 
   // 规则的类型列表。如"DOMAIN-SUFFIX"
   const ruleTypes = React.useMemo(() => RuleTypes.map(p =>
@@ -150,40 +164,46 @@ const RuleManager = React.memo(() => {
 
   return (
     <div className={"flex flex-col gap-4"}>
-      <Card className={"flex flex-col gap-2"}>
-        <CardHeader className={"p-2"}>添加自定义规则</CardHeader>
-        <div className={"flex flex-col gap-4"}>
-          <div className={"flex flex-row gap-4"}>
-            <Select onValueChange={onTypeChange}>
+      <Card>
+        <CardHeader>管理 Clash</CardHeader>
+        <CardContent>
+          <Button onClick={onRestartClash}>Restart</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>添加规则</CardHeader>
+        <CardContent className={"flex flex-col gap-2"}>
+          <Input type="text" placeholder="域名，如 abc.example.com" value={newRule.domain} onChange={onDomainChange}/>
+          <div className={"flex flex-row gap-2"}>
+            <div className={"flex-1"}><Select onValueChange={onTypeChange}>
               <SelectTrigger className=""><SelectValue placeholder="规则类型"/></SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>规则类型</SelectLabel>
+                  <SelectLabel>类型</SelectLabel>
                   {ruleTypes}
                 </SelectGroup>
               </SelectContent>
-            </Select>
+            </Select></div>
 
-            <Select onValueChange={onProxyGroupChange}>
+            <div className={"flex-1"}><Select onValueChange={onProxyGroupChange}>
               <SelectTrigger className=""><SelectValue placeholder="分流规则"/></SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>分流规则</SelectLabel>
+                  <SelectLabel>分流</SelectLabel>
                   {proxyGroups}
                 </SelectGroup>
               </SelectContent>
-            </Select>
-          </div>
-        </div>
+            </Select></div>
 
-        <Input type="text" placeholder="新规则的域名，如 abc.example.com" value={newRule.domain}
-               onChange={onDomainChange}/>
-        <Button onClick={onAdd}>添加</Button>
+            <Button className={"flex-1"} onClick={onAdd}>添加</Button>
+          </div>
+        </CardContent>
       </Card>
 
-      <Card className={"flex flex-col"}>
-        <CardHeader className={"p-2"}>已添加的自定义规则</CardHeader>
-        <div className={"flex flex-col flex-grow overflow-y-auto h-[400px]"}>{rules}</div>
+      <Card>
+        <CardHeader>已添加的规则</CardHeader>
+        <CardContent className={"flex flex-col gap-1 overflow-y-auto h-[250px]"}>{rules}</CardContent>
       </Card>
     </div>
   )

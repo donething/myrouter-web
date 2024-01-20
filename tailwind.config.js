@@ -13,8 +13,12 @@ export default {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1400px",
+        "2xl": "1400px"
       },
+    },
+    screens: {
+      // 4K 缩放200%时的屏蔽尺寸标识。使用如 `className={"4k/2:w-3/5"}`
+      '4k/2': {'raw': '(min-width: 1536px) and (resolution: 2.5dppx)'}
     },
     extend: {
       colors: {
