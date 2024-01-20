@@ -20,7 +20,7 @@ const App = () => {
       <Toaster/>
 
       <Tabs defaultValue={defaultTab}
-            className="h-[100dvh] w-screen overflow-hidden 4k/2:w-3/5 mx-auto pl-2 pr-2flex flex-col">
+            className="h-[100dvh] w-screen overflow-hidden 4k/2:w-3/5 mx-auto pl-2 pr-2">
         <TabsList>
           <TabsTrigger value="rules">Clash</TabsTrigger>
           <TabsTrigger value="router">路由器</TabsTrigger>
