@@ -19,8 +19,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <Toaster/>
 
-      <Tabs defaultValue={defaultTab}
-            className="h-[100dvh] w-screen overflow-hidden 4k/2:w-3/5 mx-auto pl-2 pr-2">
+      <Tabs defaultValue={defaultTab} className="h-[100dvh] w-screen overflow-hidden 4k/2:w-3/5 mx-auto pl-2 pr-2">
         <TabsList>
           <TabsTrigger value="rules">Clash</TabsTrigger>
           <TabsTrigger value="router">路由器</TabsTrigger>
