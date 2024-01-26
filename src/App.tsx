@@ -4,7 +4,8 @@ import {QueryClient, QueryClientProvider} from "@tanstack/react-query"
 import Settings, {LS_SETTINGS} from "./pages/Settings.tsx"
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "./components/ui/tabs.tsx"
 import './App.css'
-import {Toaster} from "@/components/ui/toaster.tsx"
+import MySSE from "@/mylib/sse.tsx"
+import {Toaster} from "@/components/ui/sonner.tsx"
 
 const queryClient = new QueryClient()
 
@@ -17,6 +18,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <MySSE/>
       <Toaster/>
 
       <Tabs defaultValue={defaultTab} className="h-[100dvh] w-screen overflow-hidden 4k/2:w-3/5 mx-auto pl-2 pr-2">

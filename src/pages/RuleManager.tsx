@@ -14,13 +14,17 @@ import {
   SelectValue
 } from "@/components/ui/select.tsx"
 import LoadingOrError from "@/mylib/dealLoad.tsx"
-import {toast} from "@/components/ui/use-toast.ts"
 import {Button} from "@/components/ui/button.tsx"
 import doAjax from "@/mylib/doajax.ts"
-import {ToastAction} from "@/components/ui/toast.tsx"
 import {retryTimeout} from "@/mylib/query.ts"
+import {toast} from "sonner"
 
 const QueryRenderData = ["QueryRenderData"]
+
+// 执行 Clash 命令。值需要和后端的`clash.go`中的`Cmd`值一致，才能正确发起请求
+type Cmd = "start" | "stop"
+const cmdStart: Cmd = "start"
+const cmdStop: Cmd = "stop"
 
 // 新规则的默认值
 const defaultValue: ClashRule = {
@@ -40,12 +44,12 @@ interface RuleItemProps {
 const addRule = async (ruleStr: string) => {
   const obj: Result<string> = await doAjax("/api/clash/rule/add", {data: ruleStr})
   if (obj.code !== 0) {
-    console.log(`添加规则'${ruleStr}'失败：`, obj.msg)
-    toast({title: "添加规则失败", description: obj.msg, variant: "destructive"})
+    console.log(`规则添加失败'${ruleStr}'：`, obj.msg)
+    toast.error("规则添加失败", {description: obj.msg})
     return false
   }
 
-  toast({title: "已添加/恢复规则", description: ruleStr})
+  toast.success("已添加/恢复规则", {description: ruleStr})
   return true
 }
 
@@ -59,14 +63,16 @@ const RuleItem = React.memo((props: RuleItemProps) => {
     const data = {data: props.rule}
     const obj: Result<string> = await doAjax("/api/clash/rule/del", data)
     if (obj.code !== 0) {
-      toast({title: "删除规则失败", description: props.rule + "\n" + obj.msg, variant: "destructive"})
+      console.log(`规则删除失败'${props.rule}'：`, obj.msg)
+      toast.error("规则删除失败", {description: obj.msg + "：\n" + props.rule})
       return
     }
 
     await props.refetch()
-    toast({
-      title: "已删除规则", description: props.rule, action:
-        <ToastAction altText={"恢复"} onClick={() => addRule(props.rule)}>恢复</ToastAction>
+    console.log(`已删除规则'${props.rule}'`)
+    toast.success("已删除规则", {
+      description: props.rule,
+      action: {label: "恢复", onClick: () => addRule(props.rule)}
     })
   }, [props])
 
@@ -103,7 +109,7 @@ const RuleManager = React.memo(() => {
   // 添加新规则
   const onAdd = React.useCallback(async () => {
     if (!newRule.type || !newRule.domain || !newRule.proxyGroup) {
-      toast({description: "规则缺少必要的信息"})
+      toast.warning("规则缺少必要的信息")
       return
     }
 
@@ -118,18 +124,13 @@ const RuleManager = React.memo(() => {
     setNewRule(defaultValue)
   }, [newRule, refetch])
 
-  const onRestartClash = React.useCallback(async () => {
+  // 发起操作 Clash 的请求
+  const onExecClash = React.useCallback(async (cmd: Cmd, title: string) => {
     // 路由器执行重启命令需要时间，先提示正在重启
-    toast({description: "开始重启 Clash ..."})
+    toast.info(`开始${title}...`)
 
     const data = {data: true}
-    const obj = await doAjax("/api/clash/manager/restart", data)
-    if (obj.code !== 0) {
-      toast({title: "重启 Clash 失败", description: obj.msg, variant: "destructive"})
-      return
-    }
-
-    toast({description: "已重启 Clash", variant: "destructive"})
+    await doAjax(`/api/clash/manager/${cmd}`, data)
   }, [])
 
   // 规则的类型列表。如"DOMAIN-SUFFIX"
@@ -166,8 +167,10 @@ const RuleManager = React.memo(() => {
     <div className={"flex flex-col gap-4 h-full pb-14"}>
       <Card>
         <CardHeader>管理 Clash</CardHeader>
-        <CardContent>
-          <Button onClick={onRestartClash}>Restart</Button>
+        <CardContent className={"flex flex-row gap-4"}>
+          <Button onClick={() => onExecClash(cmdStart, "运行/重启 Clash")}>运行/重启</Button>
+
+          <Button onClick={() => onExecClash(cmdStop, "停止 Clash")}>停止</Button>
         </CardContent>
       </Card>
 

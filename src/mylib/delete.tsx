@@ -1,5 +1,4 @@
-import {toast} from "@/components/ui/use-toast.ts"
-import {ToastAction} from "@/components/ui/toast.tsx"
+import {toast} from "sonner"
 
 /**
  * 删除数组中的元素，并提供撤销功能
@@ -19,7 +18,7 @@ export const delRevokeArray = <D, >(title: string,
   const iData = dataList.findIndex(item => findData(item, target))
   if (iData < 0) {
     console.log("删除失败：无法找到待删除元素的索引", "data:", target, "dataList:", dataList)
-    toast({description: `删除失败'${title}'：无法找到待删除元素的索引`, variant: "destructive"})
+    toast.warning(`删除失败'${title}'`, {description: "无法找到待删除元素的索引"})
     return
   }
 
@@ -30,13 +29,15 @@ export const delRevokeArray = <D, >(title: string,
   update(dataList)
 
   // 显示撤销删除的按钮
-  toast({
-    description: `是否恢复数据'${title}'`, action: <ToastAction altText={"恢复"} onClick={() => {
-      // 恢复项目
-      dataList.splice(iData, 0, deledDataList[0])
-      update(dataList)
+  toast.info(`是否恢复数据'${title}'`, {
+    action: {
+      label: "恢复", onClick: () => {
+        // 恢复项目
+        dataList.splice(iData, 0, deledDataList[0])
+        update(dataList)
 
-      toast({description: "已恢复数据"})
-    }}>恢复</ToastAction>
+        toast.success(`已恢复数据'${title}'`)
+      }
+    }
   })
 }

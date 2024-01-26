@@ -22,7 +22,7 @@ const LoadingOrError = (props: LoadingOrErrorProps) => {
 
   if (error) {
     console.log("加载内容出错", error)
-    // toast({title: "加载内容出错", description: error.message, variant: "destructive"})
+    // toast.error("加载内容出错", {description: error.message})
     return <Alert variant="destructive">
       <AlertCircle className="h-4 w-4"/>
       <AlertTitle>加载内容出错</AlertTitle>
